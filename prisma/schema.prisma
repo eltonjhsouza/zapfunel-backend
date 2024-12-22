@@ -1,0 +1,210 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id                 Int       @id @default(autoincrement())
+  name               String
+  email              String    @unique
+  password           String
+  whatsappNumber     String?   @map("whatsapp_number")
+  evolutionApiToken  String?   @map("evolution_api_token")
+  createdAt          DateTime  @default(now()) @map("created_at")
+  updatedAt          DateTime  @updatedAt @map("updated_at")
+  workflows          WorkFlow[]
+  webhooks           Webhook[]
+  instances          Instance[]
+  executionPhases    ExecutionPhase[]
+  tags               Tag[]
+
+  @@map("users")
+}
+
+model IntegrationPlatform {
+  id        Int       @id @default(autoincrement())
+  name      String
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime  @updatedAt @map("updated_at")
+  events    PlatformEvent[]
+
+  @@map("integration_platforms")
+}
+
+model PlatformEvent {
+  id          Int       @id @default(autoincrement())
+  platformId  Int       @map("platform_id")
+  eventName   String    @map("event_name")
+  description String?
+  createdAt   DateTime  @default(now()) @map("created_at")
+  updatedAt   DateTime  @updatedAt @map("updated_at")
+  platform    IntegrationPlatform @relation(fields: [platformId], references: [id])
+  webhooks    Webhook[]
+
+  @@map("platform_events")
+}
+
+model Webhook {
+  id              Int       @id @default(autoincrement())
+  userId          Int
+  platformEventId Int       @map("platform_event_id")
+  url             String
+  secretToken     String?   @map("secret_token")
+  createdAt       DateTime  @default(now()) @map("created_at")
+  updatedAt       DateTime  @updatedAt @map("updated_at")
+  user            User      @relation(fields: [userId], references: [id])
+  platformEvent   PlatformEvent @relation(fields: [platformEventId], references: [id])
+
+  @@map("webhooks")
+}
+
+model Message {
+  id                Int       @id @default(autoincrement())
+  contactId         Int
+  direction         Direction
+  content           String    @db.Text
+  whatsappMessageId String?   @map("whatsapp_message_id")
+  status            MessageStatus
+  createdAt         DateTime  @default(now()) @map("created_at")
+  instanceId        Int?
+  instance          Instance? @relation(fields: [instanceId], references: [id])
+  contact           Contact   @relation(fields: [contactId], references: [id])
+
+  @@map("messages")
+}
+
+model WorkFlow {
+  id             Int       @id @default(autoincrement())
+  name           String?
+  nodes          String?
+  executionPlan  String?
+  cron           String?
+  userId         Int       @unique
+  lastRunAt      DateTime?
+  lastRunId      Int?
+  lastRunStatus  Int?
+  nextRunAt      DateTime?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+  user           User      @relation(fields: [userId], references: [id])
+  executions     WorkflowExecution[]
+
+  @@unique([name, userId])
+  @@map("WorkFlow")
+}
+
+model WorkflowExecution {
+  id         Int       @id @default(autoincrement()) @unique
+  workflowId Int
+  userId     Int
+  trigger    String?
+  status     Boolean
+  completedAt DateTime?
+  workflow   WorkFlow  @relation(fields: [workflowId], references: [id])
+
+  @@map("WorkflowExecution")
+}
+
+model ExecutionPhase {
+  id                  Int       @id @default(autoincrement()) @unique
+  userId              Int
+  status              Boolean
+  number              Int
+  node                String?
+  startedAt           DateTime
+  completedAt         String?
+  inputs              String?
+  outputs             String?
+  workflowExecutionId Int
+  user                User      @relation(fields: [userId], references: [id])
+  logs                ExecutionLog[]
+
+  @@map("ExecutionPhase")
+}
+
+model ExecutionLog {
+  id               Int       @id @default(autoincrement()) @unique
+  executionPhaseId Int
+  logLevel         String?
+  message          String?
+  timestamp        DateTime
+  executionPhase   ExecutionPhase @relation(fields: [executionPhaseId], references: [id])
+
+  @@map("ExecutionLog")
+}
+
+model Credential {
+  id        Int       @id @default(autoincrement()) @unique
+  userId    Int
+  name      String?
+  value     String?
+  createdAt DateTime  @default(now())
+
+  @@map("Credential")
+}
+
+model Instance {
+  id              Int       @id @default(autoincrement()) @unique
+  instanceId      String?
+  instanceName    String?
+  owner           String?
+  profileName     String?
+  profileStatus   String?
+  status          String?
+  serverUrl       String?
+  integrationId   Int?
+  userId          Int
+  user            User      @relation(fields: [userId], references: [id])
+  integration     InstanceIntegration? @relation(fields: [integrationId], references: [id])
+  contacts        Contact[]
+  messages        Message[]
+
+  @@map("Instances")
+}
+
+model InstanceIntegration {
+  id          Int       @id @default(autoincrement()) @unique
+  integration String?
+  instances   Instance[]
+
+  @@map("InstanceIntegration")
+}
+
+model Contact {
+  id         Int       @id @default(autoincrement()) @unique
+  instanceId Int
+  number     String?
+  email      String?
+  createdAt  DateTime  @default(now())
+  instance   Instance  @relation(fields: [instanceId], references: [id])
+  messages   Message[]
+
+  @@map("Contacts")
+}
+
+model Tag {
+  id          Int       @id @default(autoincrement()) @unique
+  tagName     String?
+  description String?
+  status      Boolean?
+  userId      Int
+  user        User      @relation(fields: [userId], references: [id])
+
+  @@map("Tags")
+}
+
+enum Direction {
+  incoming
+  outgoing
+}
+
+enum MessageStatus {
+  sent
+  delivered
+  read
+  failed
+}
