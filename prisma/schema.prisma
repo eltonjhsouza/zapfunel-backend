@@ -8,109 +8,99 @@ datasource db {
 }
 
 model User {
-  id                 Int       @id @default(autoincrement())
-  name               String
-  email              String    @unique
-  password           String
-  whatsappNumber     String?   @map("whatsapp_number")
-  evolutionApiToken  String?   @map("evolution_api_token")
-  createdAt          DateTime  @default(now()) @map("created_at")
-  updatedAt          DateTime  @updatedAt @map("updated_at")
-  workflows          WorkFlow[]
-  webhooks           Webhook[]
-  instances          Instance[]
-  executionPhases    ExecutionPhase[]
-  tags               Tag[]
+  id                Int      @id @default(autoincrement())
+  name              String
+  email             String   @unique
+  password          String
+  whatsappNumber    String?  @map("whatsapp_number")
+  evolutionApiToken String?  @map("evolution_api_token")
+  createdAt         DateTime @default(now()) @map("created_at")
+  updatedAt         DateTime @updatedAt @map("updated_at")
 
   @@map("users")
 }
 
 model IntegrationPlatform {
-  id        Int       @id @default(autoincrement())
+  id        Int      @id @default(autoincrement())
   name      String
-  createdAt DateTime  @default(now()) @map("created_at")
-  updatedAt DateTime  @updatedAt @map("updated_at")
-  events    PlatformEvent[]
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
 
   @@map("integration_platforms")
 }
 
 model PlatformEvent {
-  id          Int       @id @default(autoincrement())
-  platformId  Int       @map("platform_id")
-  eventName   String    @map("event_name")
+  id          Int      @id @default(autoincrement())
+  platformId  Int      @map("platform_id")
+  eventName   String   @map("event_name")
   description String?
-  createdAt   DateTime  @default(now()) @map("created_at")
-  updatedAt   DateTime  @updatedAt @map("updated_at")
-  platform    IntegrationPlatform @relation(fields: [platformId], references: [id])
-  webhooks    Webhook[]
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
 
+  @@index([platformId], map: "platform_events_platform_id_fkey")
   @@map("platform_events")
 }
 
 model Webhook {
-  id              Int       @id @default(autoincrement())
+  id              Int      @id @default(autoincrement())
   userId          Int
-  platformEventId Int       @map("platform_event_id")
+  platformEventId Int      @map("platform_event_id")
   url             String
-  secretToken     String?   @map("secret_token")
-  createdAt       DateTime  @default(now()) @map("created_at")
-  updatedAt       DateTime  @updatedAt @map("updated_at")
-  user            User      @relation(fields: [userId], references: [id])
-  platformEvent   PlatformEvent @relation(fields: [platformEventId], references: [id])
+  secretToken     String?  @map("secret_token")
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
 
+  @@index([platformEventId], map: "webhooks_platform_event_id_fkey")
+  @@index([userId], map: "webhooks_userId_fkey")
   @@map("webhooks")
 }
 
 model Message {
-  id                Int       @id @default(autoincrement())
+  id                Int           @id @default(autoincrement())
   contactId         Int
   direction         Direction
-  content           String    @db.Text
-  whatsappMessageId String?   @map("whatsapp_message_id")
+  content           String        @db.Text
+  whatsappMessageId String?       @map("whatsapp_message_id")
   status            MessageStatus
-  createdAt         DateTime  @default(now()) @map("created_at")
+  createdAt         DateTime      @default(now()) @map("created_at")
   instanceId        Int?
-  instance          Instance? @relation(fields: [instanceId], references: [id])
-  contact           Contact   @relation(fields: [contactId], references: [id])
 
+  @@index([contactId], map: "messages_contactId_fkey")
+  @@index([instanceId], map: "messages_instanceId_fkey")
   @@map("messages")
 }
 
-model WorkFlow {
-  id             Int       @id @default(autoincrement())
-  name           String?
-  nodes          String?
-  executionPlan  String?
-  cron           String?
-  userId         Int       @unique
-  lastRunAt      DateTime?
-  lastRunId      Int?
-  lastRunStatus  Int?
-  nextRunAt      DateTime?
-  createdAt      DateTime  @default(now())
-  updatedAt      DateTime  @updatedAt
-  user           User      @relation(fields: [userId], references: [id])
-  executions     WorkflowExecution[]
+model contacts {
+  id         Int      @id @unique(map: "Contacts_id_key") @default(autoincrement())
+  instanceId Int
+  number     String?
+  email      String?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime
 
-  @@unique([name, userId])
-  @@map("WorkFlow")
+  @@index([instanceId], map: "Contacts_instanceId_fkey")
 }
 
-model WorkflowExecution {
-  id         Int       @id @default(autoincrement()) @unique
-  workflowId Int
-  userId     Int
-  trigger    String?
-  status     Boolean
-  completedAt DateTime?
-  workflow   WorkFlow  @relation(fields: [workflowId], references: [id])
-
-  @@map("WorkflowExecution")
+model credential {
+  id        Int      @id @unique(map: "Credential_id_key") @default(autoincrement())
+  userId    Int
+  name      String?
+  value     String?
+  createdAt DateTime @default(now())
 }
 
-model ExecutionPhase {
-  id                  Int       @id @default(autoincrement()) @unique
+model executionlog {
+  id               Int      @id @unique(map: "ExecutionLog_id_key") @default(autoincrement())
+  executionPhaseId Int
+  logLevel         String?
+  message          String?
+  timestamp        DateTime
+
+  @@index([executionPhaseId], map: "ExecutionLog_executionPhaseId_fkey")
+}
+
+model executionphase {
+  id                  Int      @id @unique(map: "ExecutionPhase_id_key") @default(autoincrement())
   userId              Int
   status              Boolean
   number              Int
@@ -120,81 +110,74 @@ model ExecutionPhase {
   inputs              String?
   outputs             String?
   workflowExecutionId Int
-  user                User      @relation(fields: [userId], references: [id])
-  logs                ExecutionLog[]
 
-  @@map("ExecutionPhase")
+  @@index([userId], map: "ExecutionPhase_userId_fkey")
 }
 
-model ExecutionLog {
-  id               Int       @id @default(autoincrement()) @unique
-  executionPhaseId Int
-  logLevel         String?
-  message          String?
-  timestamp        DateTime
-  executionPhase   ExecutionPhase @relation(fields: [executionPhaseId], references: [id])
-
-  @@map("ExecutionLog")
-}
-
-model Credential {
-  id        Int       @id @default(autoincrement()) @unique
-  userId    Int
-  name      String?
-  value     String?
-  createdAt DateTime  @default(now())
-
-  @@map("Credential")
-}
-
-model Instance {
-  id              Int       @id @default(autoincrement()) @unique
-  instanceId      String?
-  instanceName    String?
-  owner           String?
-  profileName     String?
-  profileStatus   String?
-  status          String?
-  serverUrl       String?
-  integrationId   Int?
-  userId          Int
-  user            User      @relation(fields: [userId], references: [id])
-  integration     InstanceIntegration? @relation(fields: [integrationId], references: [id])
-  contacts        Contact[]
-  messages        Message[]
-
-  @@map("Instances")
-}
-
-model InstanceIntegration {
-  id          Int       @id @default(autoincrement()) @unique
+model instanceintegration {
+  id          Int      @id @unique(map: "InstanceIntegration_id_key") @default(autoincrement())
   integration String?
-  instances   Instance[]
-
-  @@map("InstanceIntegration")
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime
 }
 
-model Contact {
-  id         Int       @id @default(autoincrement()) @unique
-  instanceId Int
-  number     String?
-  email      String?
-  createdAt  DateTime  @default(now())
-  instance   Instance  @relation(fields: [instanceId], references: [id])
-  messages   Message[]
+model instances {
+  id            Int      @id @unique(map: "Instances_id_key") @default(autoincrement())
+  instanceId    String?
+  instanceName  String?
+  owner         String?
+  profileName   String?
+  profileStatus String?
+  status        String?
+  serverUrl     String?
+  integrationId Int?
+  userId        Int
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime
+  apiKey        String?
 
-  @@map("Contacts")
+  @@index([integrationId], map: "Instances_integrationId_fkey")
+  @@index([userId], map: "Instances_userId_fkey")
 }
 
-model Tag {
-  id          Int       @id @default(autoincrement()) @unique
+model tags {
+  id          Int      @id @unique(map: "Tags_id_key") @default(autoincrement())
   tagName     String?
   description String?
   status      Boolean?
   userId      Int
-  user        User      @relation(fields: [userId], references: [id])
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime
 
-  @@map("Tags")
+  @@index([userId], map: "Tags_userId_fkey")
+}
+
+model workflow {
+  id            Int       @id @default(autoincrement())
+  name          String?
+  nodes         String?
+  executionPlan String?
+  cron          String?
+  userId        Int       @unique(map: "WorkFlow_userId_key")
+  lastRunAt     DateTime?
+  lastRunId     Int?
+  lastRunStatus Int?
+  nextRunAt     DateTime?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime
+
+  @@unique([name, userId], map: "WorkFlow_name_userId_key")
+}
+
+model workflowexecution {
+  id          Int       @id @unique(map: "WorkflowExecution_id_key") @default(autoincrement())
+  workflowId  Int
+  userId      Int
+  trigger     String?
+  status      Boolean
+  completedAt DateTime?
+
+  @@index([workflowId], map: "WorkflowExecution_workflowId_fkey")
 }
 
 enum Direction {
