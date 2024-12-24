@@ -1,9 +1,11 @@
 import express from 'express';
-import { createUser, getUsers } from '../controllers/userController';
+import { userController } from '../controllers/userController';
 
 const router = express.Router();
 
-router.post('/', createUser);
-router.get('/', getUsers);
+router.post('/', userController.createUser.bind(userController));
+router.get('/:id', userController.getUser.bind(userController));
+router.put('/:id', userController.updateUser.bind(userController));
+router.delete('/:id', userController.deleteUser.bind(userController));
 
 export { router as userRouter };
