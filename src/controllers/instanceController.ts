@@ -131,8 +131,33 @@ export const updateInstance = async (req: Request, res: Response) => {
 
 export const deleteInstance = async (req: Request, res: Response) => {
   try {
-    const { id } = req.params;
-    await instanceService.deleteInstance(Number(id));
+    const { instanceName } = req.params;
+    const instance = await instanceService.getInstanceByName(instanceName);
+
+    if (!instance) {
+      return res.status(404).json({ message: 'Instance not found' });
+    }
+
+    await instanceService.softDeleteInstance(instance.id);
+
+    await evolutionApiService.deleteInstance(instance?.instanceName, instance?.apiKey);
+    res.status(204).send();
+  } catch (error) {
+    console.error('Error deleting instance:', error);
+    res.status(500).json({ message: 'Error deleting instance', error });
+  }
+};
+
+export const logoutInstance = async (req: Request, res: Response) => {
+  try {
+    const { instanceName } = req.params;
+    const instance = await instanceService.getInstanceByName(instanceName);
+
+    if (!instance) {
+      return res.status(404).json({ message: 'Instance not found' });
+    }
+
+    const response = await evolutionApiService.logoutInstance(instance.instanceName, instance.apiKey);
     res.status(204).send();
   } catch (error) {
     console.error('Error deleting instance:', error);

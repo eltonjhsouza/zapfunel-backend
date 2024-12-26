@@ -35,10 +35,14 @@ export const updateInstance = async (id: number, data: Prisma.instancesCreateInp
   });
 };
 
-export const deleteInstance = async (id: number): Promise<instances> => {
-  return await prisma.instances.delete({
+export const softDeleteInstance = async (id: number): Promise<instances> => {
+  return await prisma.instances.update({
     where: {
       id,
+    },
+    data: {
+      status: false,
+      updatedAt: new Date(),
     },
   });
 };
