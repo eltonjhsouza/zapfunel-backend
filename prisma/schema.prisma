@@ -128,13 +128,13 @@ model instances {
   owner         String?
   profileName   String?
   profileStatus String?
-  status        String?
+  status        Boolean? @default(true)
   serverUrl     String?
   integrationId Int?
+  apiKey        String?
   userId        Int
   createdAt     DateTime @default(now())
   updatedAt     DateTime
-  apiKey        String?
 
   @@index([integrationId], map: "Instances_integrationId_fkey")
   @@index([userId], map: "Instances_userId_fkey")
