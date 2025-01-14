@@ -1,8 +1,9 @@
 import { Prisma } from '@prisma/client';
 import prisma from '../config/prisma';
+import crypto from 'crypto';
 
 export const getWorkflowsByUserId = async (userId: number) => {
-  return await prisma.workFlow.findMany({
+  return await prisma.workflow.findMany({
     where: {
       userId: userId,
     },
@@ -12,8 +13,10 @@ export const getWorkflowsByUserId = async (userId: number) => {
   });
 };
 
-export const createWorkflow = async (data: Prisma.WorkFlowCreateInput) => {
-  return await prisma.workFlow.create({
+export const createWorkflow = async (data: Prisma.workflowCreateInput) => {
+  data.updatedAt = new Date();
+  data.workflowId = crypto.randomBytes(16).toString('hex').toUpperCase();
+  return await prisma.workflow.create({
     data,
   });
 };

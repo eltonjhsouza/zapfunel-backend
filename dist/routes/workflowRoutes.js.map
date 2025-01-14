@@ -1,0 +1,1 @@
+{"version":3,"file":"workflowRoutes.js","sourceRoot":"","sources":["../../src/routes/workflowRoutes.ts"],"names":[],"mappings":";;;;;;AAAA,sDAA8B;AAC9B,0EAAgH;AAEhH,MAAM,MAAM,GAAG,iBAAO,CAAC,MAAM,EAAE,CAAC;AAMb,gCAAc;AAJjC,MAAM,CAAC,IAAI,CAAC,SAAS,EAAE,0CAAqB,CAAC,CAAC;AAC9C,MAAM,CAAC,GAAG,CAAC,GAAG,EAAE,iCAAY,CAAC,CAAC;AAC9B,MAAM,CAAC,IAAI,CAAC,sBAAsB,EAAE,2CAAsB,CAAC,CAAC"}

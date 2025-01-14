@@ -1,9 +1,10 @@
 import express from 'express';
-import { createWorkflowHandler, getWorkflows } from '../controllers/workflowController';
+import { createWorkflowHandler, getWorkflows, workFlowReceiveHandler } from '../controllers/workflowController';
 
 const router = express.Router();
 
-router.post('/', createWorkflowHandler);
+router.post('/create', createWorkflowHandler);
 router.get('/', getWorkflows);
+router.post('/receive/:workflowid', workFlowReceiveHandler);
 
 export { router as workflowRouter };
